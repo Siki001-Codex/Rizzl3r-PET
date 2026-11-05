@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+    background-color: #021709;
+  }
+
+  body {
+    background-color: #021709;
+    color: #ceead1;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* Heading defaults */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #021709;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #182f1f;
+  border-radius: 4px;
+  border: 2px solid #021709;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #233a29;
+}
+
+/* Glassmorphic Components */
+.glass-panel {
+  background: rgba(13, 36, 21, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.5);
+}
+
+.glass-panel-elevated {
+  background: rgba(13, 43, 22, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(155, 229, 100, 0.30);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 32px rgba(155, 229, 100, 0.15);
+}
+
+.glass-pill {
+  background: rgba(24, 47, 31, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Glow effects */
+.glow-lime {
+  box-shadow: 0 0 24px rgba(155, 229, 100, 0.45);
+}
+
+.glow-lime-sm {
+  box-shadow: 0 0 12px rgba(155, 229, 100, 0.3);
+}
+
+.glow-teal {
+  box-shadow: 0 0 24px rgba(45, 212, 191, 0.4);
+}
+
+/* Telemetry pulse animation */
+@keyframes telemetry-pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.03); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.telemetry-updated {
+  animation: telemetry-pulse 0.28s ease-in-out;
+}
+
+/* Radial aura helpers */
+.aura-lime {
+  background: radial-gradient(circle, rgba(155, 229, 100, 0.15) 0%, transparent 70%);
+}
+
+.aura-teal {
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.12) 0%, transparent 70%);
+}
+
+/* Tabular figures for telemetry numerals */
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
