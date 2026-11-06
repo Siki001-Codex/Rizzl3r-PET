@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { login } from '../lib/api'
@@ -13,11 +13,7 @@ export default function AdminLogin() {
   const [showPass, setShowPass]   = useState(false)
   const [status, setStatus]       = useState<'idle' | 'loading' | 'error'>('idle')
   const [errorMsg, setErrorMsg]   = useState('')
-  const passRef = useRef<HTMLInputElement>(null)
-
-  const fillDemo = () => { setPassword(DEMO_PASS); passRef.current?.focus() }
-
-  const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus('loading')
     setErrorMsg('')
@@ -26,7 +22,7 @@ export default function AdminLogin() {
       navigate('/admin')
     } else {
       setStatus('error')
-      setErrorMsg('Invalid credentials. Click "Use Primary Superadmin Key" below to autofill.')
+      setErrorMsg('Invalid credentials. Please enter the correct access key.')
     }
   }
 
@@ -58,11 +54,6 @@ export default function AdminLogin() {
             <p className="text-white/40 text-xs mt-2">Lagos Central Bay · Secure Access</p>
           </div>
 
-          {/* Demo hint */}
-          <div className="rounded-xl p-3 mb-6 text-center border" style={{ background: 'rgba(155,229,100,0.06)', borderColor: 'rgba(155,229,100,0.2)' }}>
-            <p className="text-[#9BE564] text-xs font-medium">🔑 Demo credentials — click the button below to autofill</p>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email — read-only */}
             <div>
@@ -81,7 +72,7 @@ export default function AdminLogin() {
             <div>
               <label className="text-white/60 text-xs font-medium block mb-1.5" htmlFor="password">Superadmin Access Key</label>
               <div className="relative">
-                <input id="password" ref={passRef} type={showPass ? 'text' : 'password'} value={password}
+                <input id="password" type={showPass ? 'text' : 'password'} value={password}
                   onChange={e => { setPassword(e.target.value); if (status === 'error') setStatus('idle') }}
                   placeholder="Enter access key…" autoComplete="current-password"
                   className={`w-full border ${status === 'error' ? 'border-red-500/60' : 'border-white/15'} rounded-xl px-4 py-3 pr-10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#9BE564]/50 transition-all`}
@@ -92,12 +83,6 @@ export default function AdminLogin() {
                 </button>
               </div>
             </div>
-
-            {/* Demo autofill */}
-            <button type="button" onClick={fillDemo}
-              className="w-full py-2.5 rounded-xl border border-[#9BE564]/30 text-[#9BE564] text-xs font-semibold hover:bg-[#9BE564]/10 transition-colors flex items-center justify-center gap-2">
-              <Icon name="key" size={14} /> Use Primary Superadmin Key
-            </button>
 
             {/* Error */}
             <AnimatePresence>
