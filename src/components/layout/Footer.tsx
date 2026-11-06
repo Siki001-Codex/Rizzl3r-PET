@@ -15,11 +15,11 @@ export default function Footer() {
               </div>
               <div>
                 <span className="text-white font-bold text-sm font-display tracking-wide block">RIZZL3R PET</span>
-                <span className="text-[#9BE564] text-[10px] font-medium tracking-widest uppercase">Recovery · Lagos</span>
+                <span className="text-[#9BE564] text-[10px] font-medium tracking-widest uppercase">Recovery · Nationwide Nigeria</span>
               </div>
             </div>
             <p className="text-white/50 text-sm leading-relaxed max-w-xs">
-              Lagos's premier PET bottle recovery and circularity platform. Connecting households, schools, hotels and corporates to a verified circular supply chain — with instant, transparent payouts.
+              Nigeria's premier nationwide PET bottle recovery and circularity infrastructure. Connecting households, schools, hotels and corporates across all 36 States &amp; FCT Abuja to a verified circular supply chain — with instant, transparent payouts.
             </p>
             <div className="flex items-center gap-3 mt-6">
               <a href="https://wa.me/2349069935434" target="_blank" rel="noopener noreferrer"
@@ -44,7 +44,7 @@ export default function Footer() {
               {[
                 { icon: 'phone', text: '09069935434', href: 'tel:09069935434' },
                 { icon: 'mail', text: 'Sixtus7498@gmail.com', href: 'mailto:Sixtus7498@gmail.com' },
-                { icon: 'location_on', text: 'Lagos, Nigeria', href: '#' },
+                { icon: 'location_on', text: 'Nationwide Network · Nigeria', href: '#' },
               ].map(item => (
                 <li key={item.text}>
                   <a href={item.href} className="flex items-center gap-2 text-white/50 hover:text-[#9BE564] transition-colors text-sm">
@@ -80,7 +80,7 @@ export default function Footer() {
         </div>
 
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-white/30 text-xs">© {year} Rizzl3r PET Recovery. All rights reserved. Lagos, Nigeria.</p>
+          <p className="text-white/30 text-xs">© {year} Rizzl3r PET Recovery. All rights reserved. Nationwide Operations, Nigeria.</p>
           <div className="flex items-center gap-4 text-xs text-white/30">
             <span>Circular Economy Compliant</span>
             <span className="text-white/10">|</span>

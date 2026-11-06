@@ -12,6 +12,28 @@ const VOLUME_OPTIONS = [
   '5,000+ kg (Enterprise – Factory Baled)',
 ]
 
+const NIGERIA_STATES = [
+  'Lagos State',
+  'Abuja (FCT)',
+  'Rivers (Port Harcourt)',
+  'Oyo (Ibadan)',
+  'Kano State',
+  'Ogun State',
+  'Anambra (Onitsha/Awka)',
+  'Edo (Benin City)',
+  'Delta (Warri/Asaba)',
+  'Kaduna State',
+  'Enugu State',
+  'Kwara (Ilorin)',
+  'Ondo State',
+  'Akwa Ibom (Uyo)',
+  'Imo (Owerri)',
+  'Plateau (Jos)',
+  'Cross River (Calabar)',
+  'Abia (Aba/Umuahia)',
+  'Other States (Nationwide Coverage)',
+]
+
 interface BookingFormProps {
   prefillGrade?: PetGrade
   prefillVolume?: number
@@ -29,7 +51,7 @@ export default function BookingForm({ prefillGrade, prefillVolume }: BookingForm
   }
 
   const [form, setForm] = useState({
-    name: '', whatsapp: '', email: '', address: '',
+    name: '', whatsapp: '', email: '', state: NIGERIA_STATES[0], address: '',
     volume: prefillVolume ? matchVolume(prefillVolume) : VOLUME_OPTIONS[0],
     targetDate: '', notes: '',
   })
@@ -58,13 +80,14 @@ export default function BookingForm({ prefillGrade, prefillVolume }: BookingForm
     setErrors({})
     setStatus('submitting')
     try {
+      const fullAddress = `${form.address.trim()}, ${form.state}`
       await createDispatch({
         customerName: form.name, phone: form.whatsapp, email: form.email,
-        address: form.address, volumeRange: form.volume, targetDate: form.targetDate,
+        address: fullAddress, volumeRange: form.volume, targetDate: form.targetDate,
         notes: form.notes, grade: prefillGrade || 'mixed',
       })
       setStatus('success')
-      setForm({ name: '', whatsapp: '', email: '', address: '', volume: VOLUME_OPTIONS[0], targetDate: '', notes: '' })
+      setForm({ name: '', whatsapp: '', email: '', state: NIGERIA_STATES[0], address: '', volume: VOLUME_OPTIONS[0], targetDate: '', notes: '' })
       setTimeout(() => successRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
     } catch { setStatus('error') }
   }
@@ -110,11 +133,20 @@ export default function BookingForm({ prefillGrade, prefillVolume }: BookingForm
         {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
       </div>
 
-      <div>
-        <label htmlFor="address" className="block text-white/70 text-sm font-medium mb-1.5">Pickup Address</label>
-        <input id="address" type="text" placeholder="Street, Area, Lagos" value={form.address}
-          onChange={e => setForm(f => ({ ...f, address: e.target.value }))} className={inputCls(errors.address)} />
-        {errors.address && <p className="text-red-400 text-xs mt-1">{errors.address}</p>}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div>
+          <label htmlFor="state" className="block text-white/70 text-sm font-medium mb-1.5">State / Region (Nationwide)</label>
+          <select id="state" value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))}
+            className={inputCls() + ' cursor-pointer'}>
+            {NIGERIA_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div className="sm:col-span-2">
+          <label htmlFor="address" className="block text-white/70 text-sm font-medium mb-1.5">Street Address &amp; Landmark</label>
+          <input id="address" type="text" placeholder="e.g. 14 Admiralty Way, Lekki or Plot 8 Central Area, Abuja" value={form.address}
+            onChange={e => setForm(f => ({ ...f, address: e.target.value }))} className={inputCls(errors.address)} />
+          {errors.address && <p className="text-red-400 text-xs mt-1">{errors.address}</p>}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

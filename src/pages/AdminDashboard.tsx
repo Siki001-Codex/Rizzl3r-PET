@@ -12,10 +12,11 @@ import type { Dispatch, Delivery, AssignedDriver } from '../types'
 type AdminTab = 'analytics' | 'dispatches'
 
 const FLEET_DRIVERS: AssignedDriver[] = [
-  { name: 'Ibrahim Musa', phone: '+234 802 345 6789', vehicle: 'Isuzu 3.5T Flatbed (EKY-492-XA)' },
-  { name: 'Chinedu Okafor', phone: '+234 813 908 1122', vehicle: 'Mitsubishi Canter (KJA-812-BD)' },
-  { name: 'Babatunde Adeleke', phone: '+234 905 441 9900', vehicle: 'Toyota Dyna (LSR-301-TN)' },
-  { name: 'Sunday Eze', phone: '+234 809 112 3344', vehicle: 'Ford Transit Van (APP-119-KL)' },
+  { name: 'Ibrahim Musa', phone: '+234 802 345 6789', vehicle: 'Isuzu 3.5T (EKY-492-XA) · Lagos/SW' },
+  { name: 'Babatunde Adeleke', phone: '+234 905 441 9900', vehicle: 'Toyota Dyna (ABJ-301-TN) · Abuja/FCT' },
+  { name: 'Chinedu Okafor', phone: '+234 813 908 1122', vehicle: 'Mitsubishi Canter (PHC-812-BD) · Rivers/SE' },
+  { name: 'Aliyu Garba', phone: '+234 812 334 5566', vehicle: 'Nissan Diesel 5T (KAN-119-KL) · Kano/North' },
+  { name: 'Sunday Eze', phone: '+234 809 112 3344', vehicle: 'Ford Transit (EDO-220-XA) · Midwest Hub' },
 ]
 
 const STATUS_COLORS: Record<string, 'lime' | 'teal' | 'amber' | 'red' | 'surface'> = {
@@ -60,6 +61,7 @@ export default function AdminDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [toastMsg, setToastMsg] = useState<{ text: string; type: 'success' | 'danger' | 'info' } | null>(null)
+  const [desktopView, setDesktopView] = useState<'table' | 'cards'>('table')
 
   // Driver Assignment Modal State
   const [assignModalOpen, setAssignModalOpen] = useState(false)
@@ -373,7 +375,7 @@ export default function AdminDashboard() {
       </AnimatePresence>
 
       {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 border-r border-white/10 p-4 gap-1 fixed top-0 bottom-0 left-0 z-20" style={{ background: '#010f05' }}>
+      <aside className="hidden lg:flex flex-col w-56 border-r border-white/10 p-3.5 gap-1 fixed top-0 bottom-0 left-0 z-20" style={{ background: '#010f05' }}>
         <div className="flex items-center gap-2 px-2 py-4 mb-4 border-b border-white/10">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(155,229,100,0.15)' }}>
             <Icon name="recycling" size={16} className="text-[#9BE564]" />
@@ -405,9 +407,9 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Container */}
-      <main className="flex-1 lg:ml-64 min-h-screen">
+      <main className="flex-1 lg:ml-56 min-h-screen max-w-full overflow-x-hidden">
         {/* Top bar */}
-        <header className="sticky top-0 z-10 border-b border-white/10 px-4 sm:px-8 py-3 flex items-center justify-between gap-3" style={{ background: 'rgba(1,15,5,0.95)', backdropFilter: 'blur(12px)' }}>
+        <header className="sticky top-0 z-10 border-b border-white/10 px-4 sm:px-6 py-3 flex items-center justify-between gap-3" style={{ background: 'rgba(1,15,5,0.95)', backdropFilter: 'blur(12px)' }}>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-white font-bold text-sm sm:text-base">{tab === 'analytics' ? 'Daily Intake Analytics' : 'Inbound Dispatches'}</h1>
@@ -417,7 +419,7 @@ export default function AdminDashboard() {
               </span>
             </div>
             <p className="text-white/40 text-xs">
-              Updated {lastUpdated.toLocaleTimeString()} · Lagos Operations
+              Updated {lastUpdated.toLocaleTimeString()} · Nationwide Operations (All 36 States &amp; FCT)
             </p>
           </div>
 
@@ -466,7 +468,7 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        <div className="p-4 sm:p-8">
+        <div className="p-3.5 sm:p-5 lg:p-6 max-w-full">
           {/* ── TAB 1: ANALYTICS ──────────────────────────────── */}
           {tab === 'analytics' && (
             <div className="space-y-6">
@@ -655,35 +657,64 @@ export default function AdminDashboard() {
 
           {/* ── TAB 2: INBOUND DISPATCHES ─────────────────────── */}
           {tab === 'dispatches' && (
-            <div className="space-y-6">
-              {/* Header & Search */}
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-5">
+              {/* Header with Search and Desktop View Toggle */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-white font-bold text-xl flex items-center gap-2">
+                  <h2 className="text-white font-bold text-lg sm:text-xl flex items-center gap-2">
                     Inbound Dispatch Requests
                     <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#9BE564]/15 text-[#9BE564] border border-[#9BE564]/30">
-                      {dispatches.length} Total
+                      {dispatches.length} Nationwide
                     </span>
                   </h2>
-                  <p className="text-white/40 text-xs mt-1">Accept, reject, and assign drivers to polymer collection orders</p>
+                  <p className="text-white/40 text-xs mt-0.5">Control requests: Accept, Reject, and Assign regional pickup drivers across Nigeria</p>
                 </div>
 
-                <div className="relative w-full md:w-72">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30">
-                    <Icon name="search" size={15} />
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  {/* Desktop View Switcher */}
+                  <div className="hidden lg:flex items-center bg-white/5 p-1 rounded-xl border border-white/10 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setDesktopView('table')}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                        desktopView === 'table' ? 'bg-[#9BE564] text-[#021709] shadow' : 'text-white/50 hover:text-white'
+                      }`}
+                      title="Compact Table View"
+                    >
+                      <Icon name="table_chart" size={13} />
+                      <span>Table</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDesktopView('cards')}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                        desktopView === 'cards' ? 'bg-[#9BE564] text-[#021709] shadow' : 'text-white/50 hover:text-white'
+                      }`}
+                      title="Cards View"
+                    >
+                      <Icon name="grid_view" size={13} />
+                      <span>Cards</span>
+                    </button>
                   </div>
-                  <input
-                    type="search"
-                    placeholder="Search by ID, customer, driver..."
-                    value={dispatchSearch}
-                    onChange={e => setDispatchSearch(e.target.value)}
-                    className="w-full bg-[#0d2415]/80 border border-white/15 rounded-xl pl-10 pr-4 py-2.5 text-white text-xs placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#9BE564]/50"
-                  />
+
+                  {/* Search */}
+                  <div className="relative flex-1 sm:w-64">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30">
+                      <Icon name="search" size={14} />
+                    </div>
+                    <input
+                      type="search"
+                      placeholder="Search ID, customer, city..."
+                      value={dispatchSearch}
+                      onChange={e => setDispatchSearch(e.target.value)}
+                      className="w-full bg-[#0d2415]/80 border border-white/15 rounded-xl pl-9 pr-3 py-2 text-white text-xs placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#9BE564]/50"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Status Filter Pills */}
-              <div className="flex items-center gap-1.5 bg-white/5 p-1 rounded-2xl border border-white/10 overflow-x-auto pb-1 sm:pb-1">
+              <div className="flex items-center gap-1.5 bg-white/5 p-1 rounded-2xl border border-white/10 overflow-x-auto pb-1">
                 {[
                   { label: 'All', count: dispatches.length, color: 'text-white' },
                   { label: 'Pending', count: pendingCount, color: 'text-amber-400' },
@@ -697,7 +728,7 @@ export default function AdminDashboard() {
                     <button
                       key={f.label}
                       onClick={() => setDispatchFilter(f.label as any)}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
                         isActive
                           ? 'bg-[#9BE564] text-[#021709] shadow-[0_0_15px_rgba(155,229,100,0.3)]'
                           : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -715,7 +746,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* ────────────────────────────────────────────────────────── */}
-              {/* MOBILE VIEW: High-impact Touch Logistics Cards (block lg:hidden) */}
+              {/* MOBILE VIEW: Touch Logistics Cards (block lg:hidden)       */}
               {/* ────────────────────────────────────────────────────────── */}
               <div className="block lg:hidden space-y-4">
                 {displayedDispatches.length === 0 ? (
@@ -738,7 +769,7 @@ export default function AdminDashboard() {
                         <Badge variant={STATUS_COLORS[d.status] || 'surface'}>{d.status}</Badge>
                       </div>
 
-                      {/* Customer Details & Contact Pills */}
+                      {/* Customer Details */}
                       <div className="space-y-2">
                         <div className="flex items-start justify-between gap-2">
                           <div>
@@ -762,7 +793,7 @@ export default function AdminDashboard() {
                           <span>Volume: <strong className="text-white">{d.volumeRange}</strong></span>
                         </div>
 
-                        {/* Customer Notes */}
+                        {/* Notes */}
                         {d.notes && (
                           <div className="bg-white/5 rounded-xl p-2.5 text-[11px] text-white/70 italic border border-white/5">
                             “{d.notes}”
@@ -780,7 +811,7 @@ export default function AdminDashboard() {
                           Call Customer
                         </a>
                         <a
-                          href={`https://wa.me/${d.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${d.customerName}, this is Rizzl3r PET Recovery regarding your pickup request ${d.id}.`)}`}
+                          href={`https://wa.me/${d.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${d.customerName}, this is Rizzl3r PET Recovery regarding your nationwide pickup request ${d.id}.`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="py-2 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
@@ -790,7 +821,7 @@ export default function AdminDashboard() {
                         </a>
                       </div>
 
-                      {/* Assigned Driver Card (if assigned) */}
+                      {/* Assigned Driver Card */}
                       {d.assignedDriver && (
                         <div className="bg-teal-950/40 border border-teal-500/30 rounded-2xl p-3 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2.5">
@@ -812,10 +843,9 @@ export default function AdminDashboard() {
                         </div>
                       )}
 
-                      {/* ── CORE ACTION BUTTONS: ACCEPT, ASSIGNED, REJECT ── */}
+                      {/* Core Actions: ACCEPT, ASSIGNED, REJECT */}
                       <div className="pt-2 border-t border-white/10 flex flex-col gap-2">
                         <div className="grid grid-cols-2 gap-2">
-                          {/* ACCEPT BUTTON */}
                           <button
                             type="button"
                             onClick={() => handleAccept(d.id)}
@@ -830,7 +860,6 @@ export default function AdminDashboard() {
                             {d.status === 'Accepted' ? 'ACCEPTED' : 'ACCEPT'}
                           </button>
 
-                          {/* REJECT BUTTON */}
                           <button
                             type="button"
                             onClick={() => handleReject(d.id)}
@@ -846,7 +875,6 @@ export default function AdminDashboard() {
                           </button>
                         </div>
 
-                        {/* ASSIGN DRIVER BUTTON (Full width) */}
                         <button
                           type="button"
                           onClick={() => handleOpenAssignModal(d)}
@@ -856,7 +884,6 @@ export default function AdminDashboard() {
                           {d.assignedDriver ? 'RE-ASSIGN DRIVER' : 'ASSIGN DRIVER'}
                         </button>
 
-                        {/* Secondary status shortcuts if assigned */}
                         {d.status === 'Assigned' && (
                           <div className="grid grid-cols-2 gap-2 pt-1">
                             <button
@@ -882,148 +909,205 @@ export default function AdminDashboard() {
               </div>
 
               {/* ────────────────────────────────────────────────────────── */}
-              {/* DESKTOP VIEW: Clean High-Resolution Table (hidden lg:block) */}
+              {/* DESKTOP VIEW: High-Precision Compact Table (hidden lg:block)*/}
               {/* ────────────────────────────────────────────────────────── */}
-              <div className="hidden lg:block glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-white/10 bg-white/[0.02]">
-                        {['Request ID & Date', 'Customer & Contact', 'Pickup Location', 'Volume & Grade', 'Assigned Driver', 'Status', 'Control Actions'].map(h => (
-                          <th key={h} className="text-left text-white/40 text-xs font-semibold px-5 py-4 whitespace-nowrap">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {displayedDispatches.length === 0 ? (
-                        <tr><td colSpan={7} className="text-center text-white/30 py-16 text-sm">No dispatch requests found under this filter.</td></tr>
-                      ) : (
-                        displayedDispatches.map((d, i) => (
-                          <tr key={d.id} className={`hover:bg-white/[0.02] transition-colors ${i % 2 === 0 ? 'bg-white/[0.005]' : ''}`}>
-                            {/* ID & Date */}
-                            <td className="px-5 py-4 whitespace-nowrap">
-                              <span className="text-[#9BE564] text-xs font-mono font-bold block">{d.id}</span>
-                              <span className="text-white/40 text-[11px] block mt-0.5">{d.targetDate}</span>
-                            </td>
+              <div className="hidden lg:block">
+                {desktopView === 'table' ? (
+                  <div className="glass-panel rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+                    <table className="w-full text-xs table-fixed">
+                      <thead>
+                        <tr className="border-b border-white/10 bg-white/[0.02]">
+                          <th className="w-[14%] text-left text-white/40 font-semibold px-3.5 py-3">ID &amp; Date</th>
+                          <th className="w-[23%] text-left text-white/40 font-semibold px-3.5 py-3">Customer &amp; Contact</th>
+                          <th className="w-[24%] text-left text-white/40 font-semibold px-3.5 py-3">Pickup Location</th>
+                          <th className="w-[14%] text-left text-white/40 font-semibold px-3.5 py-3">Volume &amp; Grade</th>
+                          <th className="w-[11%] text-left text-white/40 font-semibold px-3.5 py-3">Status / Driver</th>
+                          <th className="w-[14%] text-right text-white/40 font-semibold px-3.5 py-3">Action Controls</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {displayedDispatches.length === 0 ? (
+                          <tr><td colSpan={6} className="text-center text-white/30 py-12 text-sm">No dispatch requests found under this filter.</td></tr>
+                        ) : (
+                          displayedDispatches.map((d, i) => (
+                            <tr key={d.id} className={`hover:bg-white/[0.02] transition-colors ${i % 2 === 0 ? 'bg-white/[0.005]' : ''}`}>
+                              {/* ID & Date */}
+                              <td className="px-3.5 py-3 align-top">
+                                <span className="text-[#9BE564] font-mono font-bold block">{d.id}</span>
+                                <span className="text-white/40 text-[10px] block mt-0.5">{d.targetDate}</span>
+                              </td>
 
-                            {/* Customer & Contacts */}
-                            <td className="px-5 py-4">
-                              <span className="text-white font-bold block">{d.customerName}</span>
-                              <div className="flex items-center gap-2 mt-1">
-                                <a href={`tel:${d.phone}`} className="text-white/70 hover:text-[#9BE564] text-xs font-mono transition-colors">
-                                  {d.phone}
-                                </a>
-                                <span className="text-white/20">|</span>
-                                <a
-                                  href={`https://wa.me/${d.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${d.customerName}, this is Rizzl3r PET Recovery regarding your pickup request ${d.id}.`)}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[11px] text-emerald-400 hover:underline"
-                                >
-                                  <Icon name="chat" size={11} /> WhatsApp
-                                </a>
-                              </div>
-                            </td>
-
-                            {/* Location & Notes */}
-                            <td className="px-5 py-4 max-w-xs">
-                              <div className="text-white/80 text-xs font-medium leading-snug">{d.address}</div>
-                              {d.notes && <div className="text-white/40 text-[11px] mt-1 line-clamp-2 italic">“{d.notes}”</div>}
-                            </td>
-
-                            {/* Volume & Grade */}
-                            <td className="px-5 py-4 whitespace-nowrap">
-                              <div className="text-white/80 text-xs font-medium">{d.volumeRange}</div>
-                              <span className="inline-block mt-1 text-[10px] uppercase font-bold text-[#9BE564] bg-[#9BE564]/10 border border-[#9BE564]/20 px-2 py-0.5 rounded-full">
-                                {d.grade || 'mixed'}
-                              </span>
-                            </td>
-
-                            {/* Assigned Driver */}
-                            <td className="px-5 py-4 whitespace-nowrap">
-                              {d.assignedDriver ? (
-                                <div className="flex items-center gap-2">
-                                  <div className="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-300 flex items-center justify-center font-bold text-xs">
-                                    <Icon name="badge" size={13} />
-                                  </div>
-                                  <div>
-                                    <div className="text-white font-bold text-xs leading-none">{d.assignedDriver.name}</div>
-                                    <div className="text-white/40 text-[10px] mt-0.5">{d.assignedDriver.vehicle}</div>
-                                  </div>
+                              {/* Customer & Contacts */}
+                              <td className="px-3.5 py-3 align-top">
+                                <span className="text-white font-bold block truncate" title={d.customerName}>{d.customerName}</span>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <a href={`tel:${d.phone}`} className="text-white/70 hover:text-[#9BE564] text-[11px] font-mono transition-colors">
+                                    {d.phone}
+                                  </a>
+                                  <span className="text-white/20">|</span>
+                                  <a
+                                    href={`https://wa.me/${d.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${d.customerName}, this is Rizzl3r PET Recovery regarding your pickup request ${d.id}.`)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-0.5 text-[10px] text-emerald-400 hover:underline"
+                                  >
+                                    <Icon name="chat" size={10} /> WhatsApp
+                                  </a>
                                 </div>
-                              ) : (
-                                <span className="text-white/30 text-xs italic">Unassigned</span>
-                              )}
-                            </td>
+                              </td>
 
-                            {/* Status Badge */}
-                            <td className="px-5 py-4 whitespace-nowrap">
-                              <Badge variant={STATUS_COLORS[d.status] || 'surface'}>{d.status}</Badge>
-                            </td>
+                              {/* Location & Notes */}
+                              <td className="px-3.5 py-3 align-top">
+                                <div className="text-white/80 font-medium leading-snug line-clamp-2" title={d.address}>
+                                  {d.address}
+                                </div>
+                                {d.notes && <div className="text-white/40 text-[10px] mt-0.5 line-clamp-1 italic">“{d.notes}”</div>}
+                              </td>
 
-                            {/* ACTION BUTTONS: ACCEPT, ASSIGNED, REJECT */}
-                            <td className="px-5 py-4 whitespace-nowrap">
-                              <div className="flex items-center gap-1.5">
-                                {/* ACCEPT BUTTON */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleAccept(d.id)}
-                                  disabled={d.status === 'Accepted'}
-                                  className={`px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1 transition-all ${
-                                    d.status === 'Accepted'
-                                      ? 'bg-[#9BE564]/20 text-[#9BE564]/60 cursor-default'
-                                      : 'bg-[#9BE564] text-[#021709] hover:brightness-105 active:scale-95 shadow-[0_0_10px_rgba(155,229,100,0.3)]'
-                                  }`}
-                                  title="Accept pickup request"
-                                >
-                                  <Icon name="check" size={13} />
-                                  ACCEPT
-                                </button>
+                              {/* Volume & Grade */}
+                              <td className="px-3.5 py-3 align-top">
+                                <div className="text-white/80 font-medium truncate" title={d.volumeRange}>{d.volumeRange}</div>
+                                <span className="inline-block mt-0.5 text-[9px] uppercase font-bold text-[#9BE564] bg-[#9BE564]/10 border border-[#9BE564]/20 px-1.5 py-0.2 rounded-full">
+                                  {d.grade || 'mixed'}
+                                </span>
+                              </td>
 
-                                {/* ASSIGN DRIVER BUTTON */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenAssignModal(d)}
-                                  className="px-3 py-1.5 rounded-lg font-bold text-xs bg-teal-500/20 hover:bg-teal-500/30 border border-teal-400/40 text-teal-300 flex items-center gap-1 transition-all active:scale-95"
-                                  title="Assign driver to this pickup"
-                                >
-                                  <Icon name="local_shipping" size={13} />
-                                  ASSIGN
-                                </button>
+                              {/* Status & Assigned Driver */}
+                              <td className="px-3.5 py-3 align-top">
+                                <Badge variant={STATUS_COLORS[d.status] || 'surface'}>{d.status}</Badge>
+                                {d.assignedDriver ? (
+                                  <div className="text-[10px] text-teal-300/80 truncate mt-1 flex items-center gap-1" title={`${d.assignedDriver.name} · ${d.assignedDriver.vehicle}`}>
+                                    <Icon name="badge" size={11} className="shrink-0 text-teal-400" />
+                                    <span className="truncate font-medium">{d.assignedDriver.name}</span>
+                                  </div>
+                                ) : (
+                                  <div className="text-[10px] text-white/30 italic mt-1">Unassigned</div>
+                                )}
+                              </td>
 
-                                {/* REJECT BUTTON */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleReject(d.id)}
-                                  disabled={d.status === 'Rejected'}
-                                  className={`px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1 transition-all ${
-                                    d.status === 'Rejected'
-                                      ? 'bg-red-500/20 text-red-300/40 border border-red-500/20 cursor-default'
-                                      : 'bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 active:scale-95'
-                                  }`}
-                                  title="Reject pickup request"
-                                >
-                                  <Icon name="close" size={13} />
-                                  REJECT
-                                </button>
+                              {/* Action Buttons: ACCEPT, ASSIGNED, REJECT */}
+                              <td className="px-3.5 py-3 align-top text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  {/* ACCEPT BUTTON */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAccept(d.id)}
+                                    disabled={d.status === 'Accepted'}
+                                    className={`px-2 py-1.5 rounded-lg font-bold text-[10px] flex items-center gap-0.5 transition-all ${
+                                      d.status === 'Accepted'
+                                        ? 'bg-[#9BE564]/10 text-[#9BE564]/40 cursor-default'
+                                        : 'bg-[#9BE564] text-[#021709] hover:brightness-105 active:scale-95 shadow-sm'
+                                    }`}
+                                    title="Accept pickup request"
+                                  >
+                                    <Icon name="check" size={11} />
+                                    ACCEPT
+                                  </button>
 
-                                {/* Overflow dropdown for status overrides */}
-                                <select
-                                  value={d.status}
-                                  onChange={e => handleStatusChange(d.id, e.target.value)}
-                                  className="border border-white/10 rounded-lg px-2 py-1 text-white/60 text-xs bg-[#0d2415] focus:outline-none cursor-pointer"
-                                  aria-label="Change status dropdown"
-                                >
-                                  {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
+                                  {/* ASSIGN DRIVER BUTTON */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenAssignModal(d)}
+                                    className="px-2 py-1.5 rounded-lg font-bold text-[10px] bg-teal-500/20 hover:bg-teal-500/30 border border-teal-400/40 text-teal-300 flex items-center gap-0.5 transition-all active:scale-95"
+                                    title="Assign driver to this pickup"
+                                  >
+                                    <Icon name="local_shipping" size={11} />
+                                    ASSIGN
+                                  </button>
+
+                                  {/* REJECT BUTTON */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleReject(d.id)}
+                                    disabled={d.status === 'Rejected'}
+                                    className={`px-1.5 py-1.5 rounded-lg font-bold text-[10px] flex items-center gap-0.5 transition-all ${
+                                      d.status === 'Rejected'
+                                        ? 'bg-red-500/10 text-red-400/40 border border-red-500/15 cursor-default'
+                                        : 'bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 active:scale-95'
+                                    }`}
+                                    title="Reject pickup request"
+                                  >
+                                    <Icon name="close" size={11} />
+                                    REJECT
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  /* Desktop Grid Cards View */
+                  <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {displayedDispatches.map(d => (
+                      <div
+                        key={d.id}
+                        className="glass-panel rounded-2xl p-4 border border-white/10 shadow-lg space-y-3 relative flex flex-col justify-between"
+                        style={{ background: 'rgba(8, 31, 16, 0.7)' }}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                            <span className="font-mono text-xs font-extrabold text-[#9BE564]">{d.id}</span>
+                            <Badge variant={STATUS_COLORS[d.status] || 'surface'}>{d.status}</Badge>
+                          </div>
+                          <div className="mt-2.5">
+                            <h4 className="text-white font-bold text-sm">{d.customerName}</h4>
+                            <p className="text-white/70 text-xs mt-1 leading-snug line-clamp-2">{d.address}</p>
+                            <div className="flex items-center justify-between text-xs text-white/50 mt-2">
+                              <span>Volume: <strong className="text-white">{d.volumeRange}</strong></span>
+                              <span className="text-[10px] uppercase font-bold text-[#9BE564] bg-[#9BE564]/10 px-1.5 py-0.5 rounded">{d.grade || 'mixed'}</span>
+                            </div>
+                            {d.assignedDriver && (
+                              <div className="mt-2 p-2 bg-teal-500/10 border border-teal-500/20 rounded-xl flex items-center justify-between text-xs">
+                                <div>
+                                  <div className="text-white font-semibold text-xs">{d.assignedDriver.name}</div>
+                                  <div className="text-teal-300/60 text-[10px]">{d.assignedDriver.vehicle}</div>
+                                </div>
+                                <span className="font-mono text-[10px] text-[#9BE564]">{d.assignedDriver.phone}</span>
                               </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-white/10 flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleAccept(d.id)}
+                            disabled={d.status === 'Accepted'}
+                            className={`flex-1 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-all ${
+                              d.status === 'Accepted'
+                                ? 'bg-[#9BE564]/20 text-[#9BE564]/50 cursor-default'
+                                : 'bg-[#9BE564] text-[#021709] hover:brightness-105'
+                            }`}
+                          >
+                            <Icon name="check" size={13} /> ACCEPT
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenAssignModal(d)}
+                            className="flex-1 py-2 rounded-lg font-bold text-xs bg-teal-500/20 hover:bg-teal-500/30 border border-teal-400/40 text-teal-300 flex items-center justify-center gap-1 transition-all"
+                          >
+                            <Icon name="local_shipping" size={13} /> ASSIGN
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleReject(d.id)}
+                            disabled={d.status === 'Rejected'}
+                            className={`px-3 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-all ${
+                              d.status === 'Rejected'
+                                ? 'bg-red-500/20 text-red-300/40 cursor-default'
+                                : 'bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400'
+                            }`}
+                          >
+                            <Icon name="close" size={13} /> REJECT
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

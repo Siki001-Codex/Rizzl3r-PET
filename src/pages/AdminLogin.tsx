@@ -50,8 +50,8 @@ export default function AdminLogin() {
               <Icon name="recycling" size={30} className="text-[#9BE564]" />
             </div>
             <h1 className="text-white font-display font-extrabold text-lg tracking-wide">RIZZL3R PET CIRCULARITY</h1>
-            <p className="text-[#9BE564] text-xs font-semibold tracking-widest uppercase mt-1">Admin Operations Portal</p>
-            <p className="text-white/40 text-xs mt-2">Lagos Central Bay · Secure Access</p>
+            <p className="text-[#9BE564] text-xs font-semibold tracking-widest uppercase mt-1">National Admin Operations Portal</p>
+            <p className="text-white/40 text-xs mt-2">Nationwide Network (All 36 States &amp; FCT) · Secure Access</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -109,8 +109,8 @@ export default function AdminLogin() {
           {/* Bay + 2FA info */}
           <div className="mt-6 pt-5 border-t border-white/10 space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-white/40">Bay Location</span>
-              <span className="text-white/70 font-medium">Lagos Central — Active</span>
+              <span className="text-white/40">National Operations Hub</span>
+              <span className="text-white/70 font-medium">Nationwide Bays (Lagos, Abuja, PH, Kano) — Active</span>
             </div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-white/40">2FA Device</span>

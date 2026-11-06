@@ -111,7 +111,7 @@ export default function WeighbridgePage() {
         </Link>
         <div className="flex-1">
           <h1 className="text-white font-bold text-sm">Live Scale · Weighbridge Computer</h1>
-          <p className="text-white/40 text-xs">Lagos Central Bay #1</p>
+          <p className="text-white/40 text-xs">National Processing Bay #1 · Industrial Scale</p>
         </div>
         <div className="flex items-center gap-4 text-xs text-white/40">
           <span className={`flex items-center gap-1 ${streamPaused ? 'text-amber-400' : 'text-[#9BE564]'}`}>

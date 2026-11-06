@@ -76,7 +76,7 @@ export default function Navbar({ onOpenCalculator, onScrollTo }: NavbarProps) {
               </div>
               <div className="hidden sm:block">
                 <span className="text-white font-bold text-sm font-display tracking-wide leading-none block">RIZZL3R PET</span>
-                <span className="text-[#9BE564] text-[10px] font-medium tracking-widest uppercase leading-none">Recovery</span>
+                <span className="text-[#9BE564] text-[10px] font-medium tracking-widest uppercase leading-none">Recovery · Nationwide</span>
               </div>
             </Link>
 

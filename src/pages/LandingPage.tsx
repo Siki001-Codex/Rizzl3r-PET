@@ -21,7 +21,7 @@ const LI = '#9BE564'   // lime
 const TE = '#2DD4BF'   // teal
 
 const SERVICES = [
-  { icon: 'home',         title: 'Doorstep Residential Bins',    desc: 'Scheduled bottle collection from residential estates and gated communities across Lagos. Cashless payout via bank transfer.' },
+  { icon: 'home',         title: 'Doorstep Residential Bins',    desc: 'Scheduled bottle collection from residential estates and gated communities nationwide across Nigeria. Cashless payout via bank transfer.' },
   { icon: 'store',        title: 'Commercial Hospitality Buyback', desc: 'Dedicated account managers for hotels, restaurants and event venues. Volume-tiered rates, monthly reconciliation.' },
   { icon: 'school',       title: 'Educational & Faith Drives',   desc: 'Structured eco-drives for schools, mosques and churches. Certificates of participation and leaderboard rankings.' },
   { icon: 'celebration',  title: 'Zero-Waste Festival Recovery', desc: 'On-site recovery stations at concerts, markets and sports events. Real-time weight reporting and crowd engagement.' },
@@ -30,7 +30,7 @@ const SERVICES = [
 ]
 
 const JOURNEY = [
-  { num: '01', title: 'Smart Collection',      desc: 'Doorstep bins, commercial contracts and community drives gather PET bottles across all 20 Lagos LGAs.' },
+  { num: '01', title: 'Smart Collection',      desc: 'Doorstep bins, commercial contracts and community drives gather PET bottles across all 36 States & FCT Abuja.' },
   { num: '02', title: 'Optical & Manual Sort', desc: 'Conveyor-fed near-infrared sorter classifies Grade A, B, mixed and coloured streams. Human QC at each hand-sort station.' },
   { num: '03', title: 'Digital Weigh & Pay',   desc: 'Calibrated weighbridge logs every batch. Instant bank transfer or mobile money payout calculated at locked-in grade rate.' },
   { num: '04', title: 'Baling & Circular Supply', desc: 'Hydraulic baler produces 420 kg/m³ bales shipped to converters for food-grade rPET pellets and fibre.' },
@@ -98,12 +98,12 @@ export default function LandingPage() {
                 <span className="text-[#9BE564] text-xs font-semibold tracking-wide">LIVE · 14,820 kg Collected Today · +18% Surge</span>
               </div>
               <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
-                <span className="text-white">Lagos's Smartest</span><br />
+                <span className="text-white">Nigeria's Smartest</span><br />
                 <span className="text-[#9BE564]">PET Recovery</span><br />
                 <span className="text-white">Network</span>
               </h1>
               <p className="text-white/60 text-lg leading-relaxed mb-8 max-w-lg">
-                Instant, transparent payouts. Optical-sorted bales. ESG-certified circularity. We collect from households, schools, hotels and factories — and pay before the truck leaves your gate.
+                Instant, transparent payouts. Optical-sorted bales. ESG-certified circularity. We collect from households, schools, hotels and factories nationwide across Nigeria — and pay before the truck leaves your gate.
               </p>
               <div className="flex flex-wrap gap-3 mb-10">
                 <button onClick={() => openCalculator()}
@@ -336,7 +336,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div {...fadeUp} className="text-center mb-14">
             <span className="text-[#9BE564] text-xs font-semibold tracking-widest uppercase">Testimonials</span>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold text-white mt-2">Trusted by Suppliers Across Lagos</h2>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold text-white mt-2">Trusted by Suppliers Across Nigeria</h2>
             <p className="text-xs text-white/30 mt-2">* Testimonials are illustrative — demo site</p>
           </motion.div>
           <div className="grid md:grid-cols-3 gap-5">
