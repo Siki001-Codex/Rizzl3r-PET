@@ -10,6 +10,12 @@ export type FrequencyTier = 'standard' | 'bi-weekly' | 'enterprise'
 // ─── Bottle Sizes ────────────────────────────────────────────────────────────
 export type BottleSize = '500ml' | '1500ml' | '330ml'
 
+export interface AssignedDriver {
+  name: string
+  phone: string
+  vehicle: string
+}
+
 // ─── Dispatch (booking form submission) ──────────────────────────────────────
 export interface Dispatch {
   id: string
@@ -21,7 +27,8 @@ export interface Dispatch {
   targetDate: string
   notes?: string
   grade: PetGrade
-  status: 'Pending' | 'Assigned' | 'En Route' | 'Completed' | 'Cancelled'
+  status: 'Pending' | 'Accepted' | 'Assigned' | 'En Route' | 'Completed' | 'Rejected' | 'Cancelled'
+  assignedDriver?: AssignedDriver
   createdAt: string
 }
 

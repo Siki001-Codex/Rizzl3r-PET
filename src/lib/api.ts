@@ -1,4 +1,4 @@
-import type { Dispatch, Delivery, Totalizer, AuthSession, PetGrade, BottleSize } from '../types'
+import type { Dispatch, Delivery, Totalizer, AuthSession, PetGrade, BottleSize, AssignedDriver } from '../types'
 import { supabase, isSupabaseConfigured } from './supabase'
 
 // ─── Storage keys ────────────────────────────────────────────────────────────
@@ -7,6 +7,54 @@ const KEYS = {
   DELIVERIES: 'rizzl3r_deliveries_v2',
   TOTALIZER: 'rizzl3r_totalizer_v2',
   AUTH: 'rizzl3r_auth_v2',
+}
+
+function parseDriverAndStatus(rawNotes?: string | null, rawStatus?: string): { cleanNotes: string; status: Dispatch['status']; driver?: AssignedDriver } {
+  let notes = rawNotes || ''
+  let status = (rawStatus || 'Pending') as Dispatch['status']
+  let driver: AssignedDriver | undefined = undefined
+
+  // Check for status override in notes
+  const statusMatch = notes.match(/\[STATUS:\s*([A-Za-z\s]+)\]/)
+  if (statusMatch) {
+    const parsed = statusMatch[1].trim()
+    if (parsed === 'Accepted' || parsed === 'Rejected') {
+      status = parsed as Dispatch['status']
+    }
+  }
+
+  // Check for driver tag in notes
+  const driverMatch = notes.match(/\[DRIVER:\s*([^|]+)\|([^|]+)\|([^\]]+)\]/)
+  if (driverMatch) {
+    driver = {
+      name: driverMatch[1].trim(),
+      phone: driverMatch[2].trim(),
+      vehicle: driverMatch[3].trim(),
+    }
+  }
+
+  const cleanNotes = notes
+    .replace(/\[STATUS:\s*[^\]]+\]/g, '')
+    .replace(/\[DRIVER:\s*[^\]]+\]/g, '')
+    .trim()
+
+  return { cleanNotes, status, driver }
+}
+
+function encodeNotes(baseNotes?: string, status?: Dispatch['status'], driver?: AssignedDriver): string {
+  let tags: string[] = []
+  if (status === 'Accepted') tags.push('[STATUS: Accepted]')
+  if (status === 'Rejected') tags.push('[STATUS: Rejected]')
+  if (driver && driver.name) {
+    tags.push(`[DRIVER: ${driver.name} | ${driver.phone || ''} | ${driver.vehicle || ''}]`)
+  }
+  const clean = (baseNotes || '')
+    .replace(/\[STATUS:\s*[^\]]+\]/g, '')
+    .replace(/\[DRIVER:\s*[^\]]+\]/g, '')
+    .trim()
+
+  if (tags.length === 0) return clean
+  return `${tags.join(' ')} ${clean}`.trim()
 }
 
 function read<T>(key: string, fallback: T): T {
@@ -127,19 +175,23 @@ export async function getDispatches(): Promise<Dispatch[]> {
         .order('created_at', { ascending: false })
       
       if (!error && data) {
-        supaDispatches = data.map((row: any) => ({
-          id: row.id,
-          customerName: row.customer_name,
-          phone: row.phone,
-          email: row.email,
-          address: row.address,
-          volumeRange: row.volume_range,
-          targetDate: row.target_date,
-          notes: row.notes,
-          grade: row.grade,
-          status: row.status,
-          createdAt: row.created_at,
-        }))
+        supaDispatches = data.map((row: any) => {
+          const { cleanNotes, status, driver } = parseDriverAndStatus(row.notes, row.status)
+          return {
+            id: row.id,
+            customerName: row.customer_name,
+            phone: row.phone,
+            email: row.email,
+            address: row.address,
+            volumeRange: row.volume_range,
+            targetDate: row.target_date,
+            notes: cleanNotes,
+            grade: row.grade,
+            status,
+            assignedDriver: driver,
+            createdAt: row.created_at,
+          }
+        })
       } else if (error) {
         console.warn('Supabase fetch error:', error)
       }
@@ -199,19 +251,60 @@ export async function createDispatch(input: {
   return dispatch
 }
 
-export async function updateDispatchStatus(id: string, status: Dispatch['status']): Promise<void> {
+export async function updateDispatchStatus(
+  id: string,
+  newStatus: Dispatch['status'],
+  driver?: AssignedDriver
+): Promise<void> {
+  const currentList = read<Dispatch[]>(KEYS.DISPATCHES, SEED_DISPATCHES)
+  const existing = currentList.find(d => d.id === id)
+  const baseNotes = existing?.notes || ''
+  const finalDriver = driver || existing?.assignedDriver
+
+  // Map for Supabase DB check constraint ('Pending', 'Assigned', 'En Route', 'Completed', 'Cancelled')
+  let dbStatus: 'Pending' | 'Assigned' | 'En Route' | 'Completed' | 'Cancelled' = 'Pending'
+  if (newStatus === 'Rejected' || newStatus === 'Cancelled') {
+    dbStatus = 'Cancelled'
+  } else if (newStatus === 'Assigned') {
+    dbStatus = 'Assigned'
+  } else if (newStatus === 'En Route') {
+    dbStatus = 'En Route'
+  } else if (newStatus === 'Completed') {
+    dbStatus = 'Completed'
+  } else {
+    dbStatus = 'Pending'
+  }
+
+  const encoded = encodeNotes(baseNotes, newStatus, finalDriver)
+
   if (isSupabaseConfigured && supabase) {
     try {
-      const { error } = await supabase.from('dispatches').update({ status }).eq('id', id)
+      const { error } = await supabase
+        .from('dispatches')
+        .update({ status: dbStatus, notes: encoded })
+        .eq('id', id)
       if (error) console.error('Supabase update status error:', error)
     } catch (e) {
       console.warn('Supabase update failed:', e)
     }
   }
 
-  const list = await getDispatches()
-  const updated = list.map(d => d.id === id ? { ...d, status } : d)
+  const updated = currentList.map(d => {
+    if (d.id === id) {
+      return {
+        ...d,
+        status: newStatus,
+        assignedDriver: finalDriver,
+        notes: baseNotes,
+      }
+    }
+    return d
+  })
   write(KEYS.DISPATCHES, updated)
+}
+
+export async function assignDriverToDispatch(id: string, driver: AssignedDriver): Promise<void> {
+  await updateDispatchStatus(id, 'Assigned', driver)
 }
 
 // ─── Deliveries ──────────────────────────────────────────────────────────────
