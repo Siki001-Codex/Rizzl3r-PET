@@ -58,8 +58,19 @@ export default function Navbar({ onOpenCalculator, onScrollTo }: NavbarProps) {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-18">
-            {/* Logo acting as Home Link */}
-            <Link to="/" className="flex items-center gap-2 group cursor-pointer" aria-label="Rizzl3r PET Recovery home">
+            {/* Logo acting as Home Link — scrolls to top if already on home */}
+            <Link
+              to="/"
+              onClick={(e) => {
+                if (isLanding) {
+                  e.preventDefault()
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }
+                setMobileOpen(false)
+              }}
+              className="flex items-center gap-2 group cursor-pointer"
+              aria-label="Rizzl3r PET Recovery home"
+            >
               <div className="w-9 h-9 rounded-xl bg-[#9BE564]/20 border border-[#9BE564]/40 flex items-center justify-center group-hover:bg-[#9BE564]/30 transition-colors">
                 <Icon name="recycling" size={20} className="text-[#9BE564]" />
               </div>
