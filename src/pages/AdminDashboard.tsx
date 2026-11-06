@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
@@ -16,13 +16,20 @@ const STATUS_COLORS: Record<string, 'lime' | 'teal' | 'amber' | 'red' | 'surface
 }
 const STATUS_OPTIONS = ['Pending', 'Assigned', 'En Route', 'Completed', 'Cancelled']
 
-function NavItem({ icon, label, active, onClick }: { icon: string; label: string; active: boolean; onClick: () => void }) {
+function NavItem({ icon, label, active, badge, onClick }: { icon: string; label: string; active: boolean; badge?: string | null; onClick: () => void }) {
   return (
     <button onClick={onClick} aria-current={active ? 'page' : undefined}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${active ? 'text-[#9BE564] border border-[#9BE564]/25' : 'text-white/50 hover:text-white hover:bg-white/5'}`}
+      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${active ? 'text-[#9BE564] border border-[#9BE564]/25' : 'text-white/50 hover:text-white hover:bg-white/5'}`}
       style={active ? { background: 'rgba(155,229,100,0.1)' } : {}}>
-      <Icon name={icon} size={16} />
-      {label}
+      <div className="flex items-center gap-3">
+        <Icon name={icon} size={16} />
+        {label}
+      </div>
+      {badge && (
+        <span className="bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[10px] font-bold px-2 py-0.5 rounded-full">
+          {badge}
+        </span>
+      )}
     </button>
   )
 }
@@ -34,17 +41,36 @@ export default function AdminDashboard() {
   const [deliveries, setDeliveries] = useState<Delivery[]>([])
   const [dispatches, setDispatches] = useState<Dispatch[]>([])
   const [search, setSearch]     = useState('')
+  const [dispatchFilter, setDispatchFilter] = useState<'All' | 'Pending' | 'Assigned' | 'En Route' | 'Completed'>('All')
   const [page, setPage]         = useState(1)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const PER_PAGE = 6
 
-  useEffect(() => {
-    async function loadData() {
+  const loadData = useCallback(async (spinner = false) => {
+    if (spinner) setIsRefreshing(true)
+    try {
       const [dels, disps] = await Promise.all([getDeliveries(), getDispatches()])
       setDeliveries(dels)
       setDispatches(disps)
+      setLastUpdated(new Date())
+    } finally {
+      if (spinner) setIsRefreshing(false)
     }
-    loadData()
-  }, [tab])
+  }, [])
+
+  useEffect(() => {
+    loadData(true)
+    // Live polling every 10 seconds for real-time dispatch updates
+    const interval = setInterval(() => {
+      loadData(false)
+    }, 10000)
+    return () => clearInterval(interval)
+  }, [loadData])
+
+  const pendingDispatches = useMemo(() => dispatches.filter(d => d.status === 'Pending'), [dispatches])
+  const pendingCount = pendingDispatches.length
+  const latestPending = pendingDispatches[0]
 
   const filteredDeliveries = useMemo(() =>
     deliveries.filter(d =>
@@ -56,18 +82,22 @@ export default function AdminDashboard() {
   const pagedDeliveries = filteredDeliveries.slice((page - 1) * PER_PAGE, page * PER_PAGE)
   const totalPages = Math.ceil(filteredDeliveries.length / PER_PAGE)
 
+  const displayedDispatches = useMemo(() => {
+    if (dispatchFilter === 'All') return dispatches
+    return dispatches.filter(d => d.status === dispatchFilter)
+  }, [dispatches, dispatchFilter])
+
   const handleStatusChange = async (id: string, status: string) => {
     await updateDispatchStatus(id, status as Dispatch['status'])
-    const updated = await getDispatches()
-    setDispatches(updated)
+    await loadData(false)
   }
 
   const handleLogout = () => { logout(); navigate('/admin/login') }
   const KPI = MOCK_TOTALIZER
 
   const SIDEBAR = [
-    { icon: 'analytics',      label: 'Daily Intake Analytics', tab: 'analytics' as AdminTab },
-    { icon: 'local_shipping', label: 'Inbound Dispatches',     tab: 'dispatches' as AdminTab },
+    { icon: 'analytics',      label: 'Daily Intake Analytics', tab: 'analytics' as AdminTab, badge: null },
+    { icon: 'local_shipping', label: 'Inbound Dispatches',     tab: 'dispatches' as AdminTab, badge: pendingCount > 0 ? `${pendingCount} Pending` : null },
   ]
 
   return (
@@ -80,12 +110,12 @@ export default function AdminDashboard() {
           </div>
           <div>
             <div className="text-white text-xs font-bold font-display">RIZZL3R PET</div>
-            <div className="text-[#9BE564] text-[10px] tracking-widest">ADMIN</div>
+            <div className="text-[#9BE564] text-[10px] tracking-widest">ADMIN PORTAL</div>
           </div>
         </div>
 
         {SIDEBAR.map(s => (
-          <NavItem key={s.tab} icon={s.icon} label={s.label} active={tab === s.tab} onClick={() => setTab(s.tab)} />
+          <NavItem key={s.tab} icon={s.icon} label={s.label} active={tab === s.tab} badge={s.badge} onClick={() => setTab(s.tab)} />
         ))}
         <Link to="/admin/weighbridge"
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/50 hover:text-white hover:bg-white/5 transition-all">
@@ -107,26 +137,59 @@ export default function AdminDashboard() {
       {/* Main */}
       <main className="flex-1 lg:ml-64 min-h-screen">
         {/* Top bar */}
-        <header className="sticky top-0 z-10 border-b border-white/10 px-4 sm:px-8 py-3 flex items-center justify-between" style={{ background: 'rgba(1,15,5,0.95)', backdropFilter: 'blur(12px)' }}>
+        <header className="sticky top-0 z-10 border-b border-white/10 px-4 sm:px-8 py-3 flex items-center justify-between gap-3" style={{ background: 'rgba(1,15,5,0.95)', backdropFilter: 'blur(12px)' }}>
           <div>
-            <h1 className="text-white font-bold text-sm">{tab === 'analytics' ? 'Daily Intake Analytics' : 'Inbound Dispatches'}</h1>
-            <p className="text-white/40 text-xs">{new Date().toLocaleDateString('en-NG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link to="/" className="text-white/40 hover:text-[#9BE564] transition-colors p-2 rounded-lg flex items-center gap-1.5 text-xs font-medium border border-white/5 bg-white/5 hover:border-white/15" title="Go to Home Website">
-              <Icon name="home" size={16} />
-              <span className="hidden sm:inline">Website</span>
-            </Link>
-            {/* Mobile nav pills */}
-            <div className="flex lg:hidden gap-1">
-              {SIDEBAR.map(s => (
-                <button key={s.tab} onClick={() => setTab(s.tab)} aria-label={s.label}
-                  className={`p-2 rounded-lg transition-colors ${tab === s.tab ? 'text-[#9BE564]' : 'text-white/40'}`}>
-                  <Icon name={s.icon} size={18} />
-                </button>
-              ))}
-              <Link to="/admin/weighbridge" className="p-2 rounded-lg text-white/40"><Icon name="scale" size={18} /></Link>
+            <div className="flex items-center gap-2">
+              <h1 className="text-white font-bold text-sm sm:text-base">{tab === 'analytics' ? 'Daily Intake Analytics' : 'Inbound Dispatches'}</h1>
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-[#9BE564] bg-[#9BE564]/10 border border-[#9BE564]/20 px-2 py-0.5 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#9BE564] animate-pulse"></span>
+                Live Sync
+              </span>
             </div>
+            <p className="text-white/40 text-xs">
+              Updated {lastUpdated.toLocaleTimeString()} · {new Date().toLocaleDateString('en-NG', { weekday: 'short', day: 'numeric', month: 'short' })}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Mobile nav pills */}
+            <div className="flex lg:hidden items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10">
+              <button onClick={() => setTab('analytics')}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${tab === 'analytics' ? 'bg-[#9BE564] text-[#021709]' : 'text-white/60'}`}>
+                <Icon name="analytics" size={14} />
+                <span>Analytics</span>
+              </button>
+              <button onClick={() => setTab('dispatches')}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all relative ${tab === 'dispatches' ? 'bg-[#9BE564] text-[#021709]' : 'text-white/60'}`}>
+                <Icon name="local_shipping" size={14} />
+                <span>Dispatches</span>
+                {pendingCount > 0 && (
+                  <span className="bg-amber-400 text-[#021709] text-[9px] font-black px-1.5 py-0.2 rounded-full">
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+              <Link to="/admin/weighbridge" className="p-1.5 text-white/40 hover:text-white" title="Weighbridge">
+                <Icon name="scale" size={14} />
+              </Link>
+            </div>
+
+            {/* Refresh button */}
+            <button
+              onClick={() => loadData(true)}
+              disabled={isRefreshing}
+              className="p-2 text-white/50 hover:text-white rounded-lg border border-white/5 bg-white/5 hover:border-white/15 transition-all"
+              title="Refresh database"
+            >
+              <Icon name="refresh" size={16} className={isRefreshing ? 'animate-spin text-[#9BE564]' : ''} />
+            </button>
+
+            {/* Back to website */}
+            <Link to="/" className="text-white/40 hover:text-[#9BE564] transition-colors p-2 rounded-lg flex items-center gap-1.5 text-xs font-medium border border-white/5 bg-white/5 hover:border-white/15" title="Go to Website">
+              <Icon name="home" size={16} />
+              <span className="hidden md:inline">Website</span>
+            </Link>
+
             <button onClick={handleLogout} className="text-white/40 hover:text-red-400 transition-colors p-2 rounded-lg" aria-label="Sign out">
               <Icon name="logout" size={18} />
             </button>
@@ -136,7 +199,31 @@ export default function AdminDashboard() {
         <div className="p-4 sm:p-8">
           {/* ── ANALYTICS ──────────────────────────────── */}
           {tab === 'analytics' && (
-            <div className="space-y-8">
+            <div className="space-y-6">
+              {/* Alert banner for pending dispatches */}
+              {pendingCount > 0 && (
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
+                  <div className="flex items-start sm:items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                      <Icon name="local_shipping" size={22} />
+                    </div>
+                    <div>
+                      <div className="text-white font-bold text-sm sm:text-base flex items-center gap-2 flex-wrap">
+                        <span>{pendingCount} Pending Dispatch Request{pendingCount > 1 ? 's' : ''} Received</span>
+                        <span className="bg-amber-400 text-[#021709] text-[10px] uppercase font-black px-2 py-0.5 rounded-full animate-pulse">Action Required</span>
+                      </div>
+                      <p className="text-white/70 text-xs mt-1">
+                        Latest: <strong className="text-white">{latestPending?.customerName}</strong> ({latestPending?.volumeRange}) • {latestPending?.address} • Phone: {latestPending?.phone}
+                      </p>
+                    </div>
+                  </div>
+                  <button onClick={() => setTab('dispatches')}
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#9BE564] text-[#021709] text-xs font-bold hover:brightness-105 active:scale-95 transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-[0_0_15px_rgba(155,229,100,0.3)]">
+                    Review Inbound Dispatches <Icon name="arrow_forward" size={14} />
+                  </button>
+                </div>
+              )}
+
               {/* KPIs */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
@@ -298,37 +385,77 @@ export default function AdminDashboard() {
 
           {/* ── DISPATCHES ─────────────────────────────── */}
           {tab === 'dispatches' && (
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-white font-bold">Inbound Dispatch Requests</h2>
-                <span className="text-white/40 text-sm">{dispatches.length} requests</span>
+            <div className="space-y-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-white font-bold text-lg">Inbound Dispatch Requests</h2>
+                  <p className="text-white/40 text-xs">Customer collection requests booked via the website</p>
+                </div>
+
+                {/* Filter pills */}
+                <div className="flex items-center gap-1.5 bg-white/5 p-1 rounded-xl border border-white/10 flex-wrap">
+                  {(['All', 'Pending', 'Assigned', 'En Route', 'Completed'] as const).map(f => {
+                    const count = f === 'All' ? dispatches.length : dispatches.filter(d => d.status === f).length
+                    return (
+                      <button key={f} onClick={() => setDispatchFilter(f)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          dispatchFilter === f ? 'bg-[#9BE564] text-[#021709] font-bold shadow' : 'text-white/60 hover:text-white'
+                        }`}>
+                        {f} <span className="opacity-70 text-[10px]">({count})</span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
+
               <div className="glass-panel rounded-2xl overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-white/10">
-                        {['ID', 'Customer', 'Phone', 'Volume', 'Target Date', 'Status', 'Actions'].map(h => (
+                        {['ID & Date', 'Customer', 'Contact', 'Location & Notes', 'Volume / Grade', 'Status', 'Change Status'].map(h => (
                           <th key={h} className="text-left text-white/40 text-xs font-semibold px-5 py-3 whitespace-nowrap">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {dispatches.length === 0 ? (
-                        <tr><td colSpan={7} className="text-center text-white/30 py-12 text-sm">No dispatch requests yet. Submit via the booking form on the main site.</td></tr>
-                      ) : dispatches.map((d, i) => (
+                      {displayedDispatches.length === 0 ? (
+                        <tr><td colSpan={7} className="text-center text-white/30 py-12 text-sm">No dispatch requests found under this filter.</td></tr>
+                      ) : displayedDispatches.map((d, i) => (
                         <tr key={d.id} className={`border-b border-white/5 hover:bg-white/[0.02] transition-colors ${i % 2 === 0 ? 'bg-white/[0.01]' : ''}`}>
-                          <td className="px-5 py-4 text-white/50 text-xs font-mono">{d.id}</td>
-                          <td className="px-5 py-4 text-white font-medium">{d.customerName}</td>
-                          <td className="px-5 py-4 text-white/50">{d.phone}</td>
-                          <td className="px-5 py-4 text-white/60 text-xs max-w-[180px] truncate">{d.volumeRange}</td>
-                          <td className="px-5 py-4 text-white/50 text-xs">{d.targetDate}</td>
-                          <td className="px-5 py-4">
-                            <Badge variant={STATUS_COLORS[d.status] || 'surface'}>{d.status}</Badge>
+                          <td className="px-5 py-4 whitespace-nowrap">
+                            <span className="text-[#9BE564] text-xs font-mono font-bold block">{d.id}</span>
+                            <span className="text-white/40 text-[11px] block">{d.targetDate}</span>
                           </td>
                           <td className="px-5 py-4">
+                            <span className="text-white font-medium block">{d.customerName}</span>
+                            {d.email && <span className="text-white/40 text-xs block">{d.email}</span>}
+                          </td>
+                          <td className="px-5 py-4 whitespace-nowrap">
+                            <a href={`tel:${d.phone}`} className="text-white/70 hover:text-[#9BE564] text-xs font-mono block transition-colors">
+                              {d.phone}
+                            </a>
+                            <a href={`https://wa.me/${d.phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] text-emerald-400 hover:underline mt-0.5">
+                              <Icon name="chat" size={12} /> WhatsApp
+                            </a>
+                          </td>
+                          <td className="px-5 py-4 max-w-xs">
+                            <div className="text-white/80 text-xs font-medium">{d.address}</div>
+                            {d.notes && <div className="text-white/40 text-[11px] mt-1 line-clamp-2 italic">“{d.notes}”</div>}
+                          </td>
+                          <td className="px-5 py-4 whitespace-nowrap">
+                            <div className="text-white/70 text-xs">{d.volumeRange}</div>
+                            <span className="inline-block mt-1 text-[10px] uppercase font-bold text-[#9BE564] bg-[#9BE564]/10 border border-[#9BE564]/20 px-1.5 py-0.5 rounded">
+                              {d.grade || 'mixed'}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4 whitespace-nowrap">
+                            <Badge variant={STATUS_COLORS[d.status] || 'surface'}>{d.status}</Badge>
+                          </td>
+                          <td className="px-5 py-4 whitespace-nowrap">
                             <select value={d.status} onChange={e => handleStatusChange(d.id, e.target.value)}
-                              className="border border-white/10 rounded-lg px-2 py-1.5 text-white/70 text-xs focus:outline-none focus:ring-1 focus:ring-[#9BE564]/50"
+                              className="border border-white/10 rounded-lg px-2.5 py-1.5 text-white/80 text-xs focus:outline-none focus:ring-1 focus:ring-[#9BE564]/50 cursor-pointer"
                               style={{ background: 'rgba(13,36,21,0.8)' }} aria-label={`Status for ${d.customerName}`}>
                               {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>

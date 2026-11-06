@@ -117,6 +117,8 @@ function ensureSeeded() {
 
 // ─── Dispatches ──────────────────────────────────────────────────────────────
 export async function getDispatches(): Promise<Dispatch[]> {
+  let supaDispatches: Dispatch[] = []
+
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase
@@ -124,8 +126,8 @@ export async function getDispatches(): Promise<Dispatch[]> {
         .select('*')
         .order('created_at', { ascending: false })
       
-      if (!error && data && data.length > 0) {
-        return data.map((row: any) => ({
+      if (!error && data) {
+        supaDispatches = data.map((row: any) => ({
           id: row.id,
           customerName: row.customer_name,
           phone: row.phone,
@@ -138,6 +140,8 @@ export async function getDispatches(): Promise<Dispatch[]> {
           status: row.status,
           createdAt: row.created_at,
         }))
+      } else if (error) {
+        console.warn('Supabase fetch error:', error)
       }
     } catch (e) {
       console.warn('Supabase fetch failed, falling back to local:', e)
@@ -145,7 +149,15 @@ export async function getDispatches(): Promise<Dispatch[]> {
   }
 
   ensureSeeded()
-  return read<Dispatch[]>(KEYS.DISPATCHES, SEED_DISPATCHES)
+  const localList = read<Dispatch[]>(KEYS.DISPATCHES, SEED_DISPATCHES)
+
+  if (supaDispatches.length > 0) {
+    const supaIds = new Set(supaDispatches.map(d => d.id))
+    const extraLocal = localList.filter(d => !supaIds.has(d.id))
+    return [...supaDispatches, ...extraLocal]
+  }
+
+  return localList
 }
 
 export async function createDispatch(input: {
@@ -158,19 +170,24 @@ export async function createDispatch(input: {
 
   if (isSupabaseConfigured && supabase) {
     try {
-      await supabase.from('dispatches').insert([{
+      const { error } = await supabase.from('dispatches').insert([{
         id,
         customer_name: input.customerName,
         phone: input.phone,
-        email: input.email,
+        email: input.email || null,
         address: input.address,
         volume_range: input.volumeRange,
         target_date: input.targetDate,
-        notes: input.notes,
-        grade: input.grade,
+        notes: input.notes || null,
+        grade: input.grade || 'mixed',
         status: 'Pending',
         created_at: now
       }])
+      if (error) {
+        console.error('Supabase dispatch insert error:', error)
+      } else {
+        console.log('Successfully saved dispatch to Supabase:', id)
+      }
     } catch (e) {
       console.warn('Supabase insert failed, stored in localStorage:', e)
     }
@@ -178,14 +195,15 @@ export async function createDispatch(input: {
 
   ensureSeeded()
   const list = read<Dispatch[]>(KEYS.DISPATCHES, SEED_DISPATCHES)
-  write(KEYS.DISPATCHES, [dispatch, ...list])
+  write(KEYS.DISPATCHES, [dispatch, ...list.filter(d => d.id !== id)])
   return dispatch
 }
 
 export async function updateDispatchStatus(id: string, status: Dispatch['status']): Promise<void> {
   if (isSupabaseConfigured && supabase) {
     try {
-      await supabase.from('dispatches').update({ status }).eq('id', id)
+      const { error } = await supabase.from('dispatches').update({ status }).eq('id', id)
+      if (error) console.error('Supabase update status error:', error)
     } catch (e) {
       console.warn('Supabase update failed:', e)
     }
